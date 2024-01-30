@@ -115,7 +115,6 @@ found:
   p->Thread_Num=0;
   p->tstack=0;
   p->tid=0;
-
   return p;
 }
 
@@ -213,8 +212,8 @@ fork(void)
   np->cwd = idup(curproc->cwd);
 
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
-
-  // pid = np->pid;
+  //np->tid=-1;
+  pid = np->pid;
 
   acquire(&ptable.lock);
 
@@ -250,11 +249,9 @@ exit(void)
   iput(curproc->cwd);
   end_op();
   curproc->cwd = 0;
-
   if(curproc->tid == 0 && curproc->Thread_Num!=0) {
     panic("Parent cannot exit before its children");
   }
-
   acquire(&ptable.lock);
 
   // Parent might be sleeping in wait().
@@ -503,15 +500,12 @@ kill(int pid)
   release(&ptable.lock);
   return -1;
 }
-
-
 int clone(void (*worker)(void*,void*),void* arg1,void* arg2,void* stack)
 {
   //int i, pid;
   struct proc *New_Thread;
   struct proc *curproc = myproc();
   uint sp,HandCrafted_Stack[3];
-
   // Allocate process.
   if((New_Thread = allocproc()) == 0){
     return -1;
@@ -555,7 +549,7 @@ int clone(void (*worker)(void*,void*),void* arg1,void* arg2,void* stack)
   HandCrafted_Stack[0]=(uint)0xfffeefff;
   HandCrafted_Stack[1]=(uint)arg1;
   HandCrafted_Stack[2]=(uint)arg2;
-
+  
   sp=(uint)New_Thread->tstack;
   sp-=3*4;
   if(copyout(New_Thread->pgdir, sp,HandCrafted_Stack, 3 * sizeof(uint)) == -1){
@@ -569,7 +563,6 @@ int clone(void (*worker)(void*,void*),void* arg1,void* arg2,void* stack)
   }
   New_Thread->tf->esp=sp;
   New_Thread->tf->eip=(uint)worker;
-
   //Duplicate all the file descriptors for the new thread
   for(uint i = 0; i < NOFILE; i++){
     if(curproc->ofile[i])
@@ -580,9 +573,10 @@ int clone(void (*worker)(void*,void*),void* arg1,void* arg2,void* stack)
   acquire(&ptable.lock);
   New_Thread->state=RUNNABLE;
   release(&ptable.lock);
+  //cprintf("process running Clone has  %d threads\n",curproc->Thread_Num);  
   return New_Thread->tid;
 }
-int join(int t_id)
+int join(int Thread_id)
 {
   struct proc  *p,*curproc=myproc();
   int Join_Thread_Exit=0,jtid;

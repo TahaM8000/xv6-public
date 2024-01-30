@@ -4,7 +4,6 @@
 #include "user.h"
 #include "x86.h"
 
-// locks
 void Lock_Init(Lock* mutex)
 {
   mutex->Is_Locked = 0;
@@ -23,8 +22,6 @@ void Lock_Release(Lock* mutex)
   asm volatile("movl $0, %0" : "+m" (mutex->Is_Locked) : );
 }
 
-// threads
-
 int 
 thread_create(void (*worker)(void*,void*),void* arg1,void* arg2)
 {
@@ -32,7 +29,6 @@ thread_create(void (*worker)(void*,void*),void* arg1,void* arg2)
   int Thread_id=clone(worker,arg1,arg2,Child_Stack);
   return Thread_id;
 }
-
 int thread_join(int thread_id)
 {
   return join(thread_id);
@@ -138,3 +134,4 @@ memmove(void *vdst, const void *vsrc, int n)
     *dst++ = *src++;
   return vdst;
 }
+
