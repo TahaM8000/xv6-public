@@ -41,5 +41,17 @@ void* malloc(uint);
 void free(void*);
 int atoi(const char*);
 
+// threads
 int thread_create(void (*)(void*,void*),void*,void*);
 int thread_join(int thread_id);
+
+//system lock 
+typedef struct Lock
+{
+    uint Is_Locked;
+} Lock;
+
+//function lock 
+void Lock_Init(Lock* mutex);
+void Lock_Acquire(Lock* mutex);
+void Lock_Release(Lock* mutex);
