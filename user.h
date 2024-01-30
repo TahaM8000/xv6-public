@@ -42,3 +42,4 @@ void free(void*);
 int atoi(const char*);
 
 int thread_create(void (*)(void*,void*),void*,void*);
+int thread_join(int thread_id);
