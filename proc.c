@@ -517,20 +517,18 @@ int clone(void (*worker)(void*,void*),void* arg1,void* arg2,void* stack)
       cprintf("Clone called by a thread\n");
       return -1;
   }
-  //The new thread parent would be curproc
+
   New_Thread->pid=curproc->pid;
   New_Thread->sz=curproc->sz;
 
-  //The tid of the thread will be determined by Number of current threads 
-  //of a process
+
   curproc->Thread_Num++;
   New_Thread->tid=curproc->Thread_Num;
   New_Thread->Is_Thread=1;
 
-  //The parent of thread will be the process calling clone
   New_Thread->parent=curproc;
 
-  //Sharing the same virtual address space
+
   New_Thread->pgdir=curproc->pgdir;
   if(!stack){
       kfree(New_Thread->kstack);
@@ -541,9 +539,10 @@ int clone(void (*worker)(void*,void*),void* arg1,void* arg2,void* stack)
       New_Thread->Is_Thread=0;
       cprintf("Child process wasn't allocated a stack\n");    
   }
-  //Assuming that child_stack has been allocated by malloc
+  
+
   New_Thread->tstack=(char*)stack;
-  //Thread has the same trapframe as its parent
+  
   *New_Thread->tf=*curproc->tf;
 
   HandCrafted_Stack[0]=(uint)0xfffeefff;
@@ -568,12 +567,16 @@ int clone(void (*worker)(void*,void*),void* arg1,void* arg2,void* stack)
     if(curproc->ofile[i])
       New_Thread->ofile[i] = filedup(curproc->ofile[i]);
   }
+
   New_Thread->cwd = idup(curproc->cwd);
   safestrcpy(New_Thread->name, curproc->name, sizeof(curproc->name));
+
+
   acquire(&ptable.lock);
   New_Thread->state=RUNNABLE;
   release(&ptable.lock);
-  //cprintf("process running Clone has  %d threads\n",curproc->Thread_Num);  
+
+
   return New_Thread->tid;
 }
 int join(int Thread_id)
@@ -589,19 +592,17 @@ int join(int Thread_id)
     }
   }
   if(!Join_Thread_Exit || curproc->killed){
-    //cprintf("Herere");
     return -1;
   }  
   acquire(&ptable.lock);
   for(;;){
-    // thread is killed by some other thread in group
-    //cprintf("I am waiting\n");
     if(curproc->killed){
       release(&ptable.lock);
+      //cprintf("Hereeeeeeeeeeeeeeeeeeeeeeeeeeeeee\n",);
       return -1;
     }
     if(p->state == ZOMBIE){
-      // Found the thread 
+
       curproc->Thread_Num--;
       jtid = p->tid;
       kfree(p->kstack);
@@ -610,6 +611,12 @@ int join(int Thread_id)
       p->pid = 0;
       p->tid = 0;
       p->tstack = 0;
+      
+      // p->pgdir = 0;
+      // p->pid = 0;
+      // p->tid = 0;
+      // p->tstack = 0;
+
       p->parent = 0;
       p->name[0] = 0;
       p->killed = 0;
